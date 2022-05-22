@@ -18,6 +18,7 @@ async function run() {
         await client.connect();
         const partCollection = client.db('istockSources').collection('parts');
 
+        //get all parts
         app.get('/part', async (req, res) => {
             const query = {};
             const cursor = partCollection.find(query);
@@ -26,12 +27,14 @@ async function run() {
         });
 
         //get single part by parts id
-        app.get('/part/:id', async (req, res) => {
+        app.get('/order/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const part = await partCollection.findOne(query);
             res.send(part);
         });
+
+
     }
     finally { }
 }
