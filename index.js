@@ -35,7 +35,8 @@ async function run() {
     try {
         await client.connect();
         const partCollection = client.db('istockSources').collection('parts');
-        const userCollection = client.db('doctorsPortal').collection('users');
+        const userCollection = client.db('istockSources').collection('users');
+        const orderCollection = client.db('istockSources').collection('order');
 
         //get all parts
         app.get('/part', async (req, res) => {
@@ -69,6 +70,17 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '3h' });
             res.send({ result, token });
+        });
+
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+            const query = { name: order.name, date: order.date, user: order.user }
+            const exists = await orderCollection.findOne(query);
+            if (exists) {
+                return res.send({ success: false, order: exists })
+            }
+            const result = await orderCollection.insertOne(order);
+            res.send({ success: true, result });
         });
 
 
