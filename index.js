@@ -59,6 +59,7 @@ async function run() {
             res.send(users);
         });
 
+        //get user information
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
@@ -72,6 +73,7 @@ async function run() {
             res.send({ result, token });
         });
 
+        //post new order
         app.post('/order', async (req, res) => {
             const order = req.body;
             const query = { name: order.name, date: order.date, user: order.user }
@@ -83,6 +85,7 @@ async function run() {
             res.send({ success: true, result });
         });
 
+        //get order by user verification
         app.get('/order', verifyJWT, async (req, res) => {
             const user = req.query.user;
             const decodedEmail = req.decoded.email;
@@ -96,7 +99,7 @@ async function run() {
             }
         });
 
-        //calcel order
+        //cancel order
         app.delete('/order/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -104,6 +107,18 @@ async function run() {
             res.send(result);
         });
 
+
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const service = req.body;
+            const price = service.price;
+            // const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: price,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({ clientSecret: paymentIntent.client_secret })
+        });
 
     }
     finally { }
