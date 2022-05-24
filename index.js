@@ -36,7 +36,7 @@ async function run() {
         await client.connect();
         const partCollection = client.db('istockSources').collection('parts');
         const userCollection = client.db('istockSources').collection('users');
-        const orderCollection = client.db('istockSources').collection('order');
+        const orderCollection = client.db('istockSources').collection('orders');
 
         //get all parts
         app.get('/part', async (req, res) => {
@@ -68,7 +68,7 @@ async function run() {
                 $set: user,
             }
             const result = await userCollection.updateOne(filter, updateDoc, options);
-            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '3h' });
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '20h' });
             res.send({ result, token });
         });
 
@@ -81,6 +81,27 @@ async function run() {
             }
             const result = await orderCollection.insertOne(order);
             res.send({ success: true, result });
+        });
+
+        app.get('/order', verifyJWT, async (req, res) => {
+            const user = req.query.user;
+            const decodedEmail = req.decoded.email;
+            if (user === decodedEmail) {
+                const query = { user: user };
+                const orders = await orderCollection.find(query).toArray();
+                return res.send(orders);
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidded access' });
+            }
+        });
+
+        //calcel order
+        app.delete('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
+            res.send(result);
         });
 
 
