@@ -37,6 +37,7 @@ async function run() {
         const partCollection = client.db('istockSources').collection('parts');
         const userCollection = client.db('istockSources').collection('users');
         const orderCollection = client.db('istockSources').collection('orders');
+        const reviewCollection = client.db('istockSources').collection('reviews');
 
         //get all parts
         app.get('/part', async (req, res) => {
@@ -107,17 +108,21 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const order = await orderCollection.findOne(query);
+            res.send(order);
+        });
 
-        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
-            const service = req.body;
-            const price = service.price;
-            // const amount = price * 100;
-            const paymentIntent = await stripe.paymentIntents.create({
-                amount: price,
-                currency: 'usd',
-                payment_method_types: ['card']
-            });
-            res.send({ clientSecret: paymentIntent.client_secret })
+
+
+
+        //post a review
+        app.post('/review', verifyJWT, async (req, res) => {
+            const review = req.body;
+            const result = await reviewCollection.insertOne(review);
+            res.send(result);
         });
 
     }
