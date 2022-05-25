@@ -132,11 +132,18 @@ async function run() {
         });
 
         //get all orders
-        app.get('/order', async (req, res) => {
+        app.get('/orders', async (req, res) => {
             const query = {};
             const cursor = orderCollection.find(query);
             const orders = await cursor.toArray();
             res.send(orders);
+        });
+
+        //post a part
+        app.post('/part', verifyJWT, async (req, res) => {
+            const part = req.body;
+            const result = await partCollection.insertOne(part);
+            res.send(result);
         });
 
     }
