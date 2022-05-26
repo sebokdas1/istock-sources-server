@@ -131,6 +131,27 @@ async function run() {
             res.send(result);
         });
 
+        //verify admin
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAcct = await userCollection.findOne({ email: requester });
+            if (requesterAcct.role === 'admin') {
+                next()
+            }
+            else {
+                res.status(403).send({ message: 'Forbidden' });
+            }
+        }
+
+        //get admins
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
+        });
+
+        //make admin
         app.put('/user/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
@@ -138,6 +159,14 @@ async function run() {
                 $set: { role: 'admin' },
             }
             const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+        //remove user
+        app.delete('/user/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const result = await userCollection.deleteOne(filter);
             res.send(result);
         });
 
