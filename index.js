@@ -152,7 +152,7 @@ async function run() {
         });
 
         //make admin
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const updateDoc = {
@@ -163,7 +163,7 @@ async function run() {
         });
 
         //remove user
-        app.delete('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.delete('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const result = await userCollection.deleteOne(filter);
@@ -179,14 +179,14 @@ async function run() {
         });
 
         //post a part
-        app.post('/part', verifyJWT, async (req, res) => {
+        app.post('/part', verifyJWT, verifyAdmin, async (req, res) => {
             const part = req.body;
             const result = await partCollection.insertOne(part);
             res.send(result);
         });
 
         //delete part
-        app.delete('/part/:id', verifyJWT, async (req, res) => {
+        app.delete('/part/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await partCollection.deleteOne(query);
