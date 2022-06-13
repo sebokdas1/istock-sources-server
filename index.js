@@ -3,6 +3,7 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.STRIPE);
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 
@@ -38,6 +39,7 @@ async function run() {
         const userCollection = client.db('istockSources').collection('users');
         const orderCollection = client.db('istockSources').collection('orders');
         const reviewCollection = client.db('istockSources').collection('reviews');
+        const paymentCollection = client.db('istockSources').collection('payments');
 
         //get all parts
         app.get('/part', async (req, res) => {
@@ -99,7 +101,41 @@ async function run() {
                 return res.status(403).send({ message: 'Forbidded access' });
             }
         });
+        //get order for payment
+        app.get('/orders/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const order = await orderCollection.findOne(query);
+            res.send(order);
+        })
+        //payment
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const part = req.body;
+            const price = part.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({ clientSecret: paymentIntent.client_secret })
+        })
 
+        //update payment
+        app.patch('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    trxId: payment.trxId
+                }
+            }
+            const updatedOrder = await orderCollection.updateOne(filter, updatedDoc)
+            const result = await paymentCollection.insertOne(payment)
+            res.send(updatedDoc)
+        })
         //cancel order
         app.delete('/order/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
