@@ -42,6 +42,18 @@ async function run() {
         const paymentCollection = client.db('istockSources').collection('payments');
 
 
+        //verify admin
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAcct = await userCollection.findOne({ email: requester });
+            if (requesterAcct.role === 'admin') {
+                next()
+            }
+            else {
+                res.status(403).send({ message: 'Forbidden' });
+            }
+        }
+
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
@@ -195,17 +207,7 @@ async function run() {
             res.send(result);
         });
 
-        //verify admin
-        const verifyAdmin = async (req, res, next) => {
-            const requester = req.decoded.email;
-            const requesterAcct = await userCollection.findOne({ email: requester });
-            if (requesterAcct.role === 'admin') {
-                next()
-            }
-            else {
-                res.status(403).send({ message: 'Forbidden' });
-            }
-        }
+
 
 
 
