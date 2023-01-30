@@ -247,3 +247,5 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`istock app listening on port ${port}`);
 });
+
+// "build": "node index.js"
