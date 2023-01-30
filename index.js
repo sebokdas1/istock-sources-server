@@ -41,21 +41,6 @@ async function run() {
         const reviewCollection = client.db('istockSources').collection('reviews');
         const paymentCollection = client.db('istockSources').collection('payments');
 
-        //get all parts
-        app.get('/part', async (req, res) => {
-            const query = {};
-            const cursor = partCollection.find(query);
-            const parts = await cursor.toArray();
-            res.send(parts);
-        });
-
-        //get single part by parts id
-        app.get('/order/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) };
-            const part = await partCollection.findOne(query);
-            res.send(part);
-        });
 
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
@@ -75,6 +60,49 @@ async function run() {
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '20h' });
             res.send({ result, token });
         });
+        //get admins
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
+        });
+
+        //make admin
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+        //remove user
+        app.delete('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const result = await userCollection.deleteOne(filter);
+            res.send(result);
+        });
+
+        //get all parts
+        app.get('/part', async (req, res) => {
+            const query = {};
+            const cursor = partCollection.find(query);
+            const parts = await cursor.toArray();
+            res.send(parts);
+        });
+
+        //get single part by parts id
+        app.get('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const part = await partCollection.findOne(query);
+            res.send(part);
+        });
+
 
         //post new order
         app.post('/order', async (req, res) => {
@@ -179,32 +207,7 @@ async function run() {
             }
         }
 
-        //get admins
-        app.get('/admin/:email', async (req, res) => {
-            const email = req.params.email;
-            const user = await userCollection.findOne({ email: email });
-            const isAdmin = user.role === 'admin';
-            res.send({ admin: isAdmin });
-        });
 
-        //make admin
-        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
-            const email = req.params.email;
-            const filter = { email: email };
-            const updateDoc = {
-                $set: { role: 'admin' },
-            }
-            const result = await userCollection.updateOne(filter, updateDoc);
-            res.send(result);
-        });
-
-        //remove user
-        app.delete('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
-            const email = req.params.email;
-            const filter = { email: email };
-            const result = await userCollection.deleteOne(filter);
-            res.send(result);
-        });
 
         //get all orders
         app.get('/orders', async (req, res) => {
