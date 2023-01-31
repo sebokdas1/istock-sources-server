@@ -34,7 +34,7 @@ function verifyJWT(req, res, next) {
 
 async function run() {
     try {
-        await client.connect();
+        client.connect();
         const partCollection = client.db('istockSources').collection('parts');
         const userCollection = client.db('istockSources').collection('users');
         const orderCollection = client.db('istockSources').collection('orders');
@@ -248,4 +248,4 @@ app.listen(port, () => {
     console.log(`istock app listening on port ${port}`);
 });
 
-// "build": "node index.js"
+// "build": "node index.js "
