@@ -37,7 +37,7 @@ function verifyJWT(req, res, next) {
 
 async function run() {
   try {
-    client.connect();
+    await client.connect();
     const partCollection = client.db("istockSources").collection("parts");
     const userCollection = client.db("istockSources").collection("users");
     const orderCollection = client.db("istockSources").collection("orders");
