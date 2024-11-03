@@ -8,11 +8,7 @@ const stripe = require("stripe")(process.env.STRIPE);
 const cors = require("cors");
 const port = process.env.PORT || 5000;
 
-app.use(
-  cors({
-    origin: ["http://localhost:3000", "https://istock-sources.web.app"],
-  })
-);
+app.use(cors());
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.USER}:${process.env.PASS}@cluster0.jxau4.mongodb.net/?retryWrites=true&w=majority`;
